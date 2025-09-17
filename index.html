@@ -1,0 +1,101 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat - Powered by GPT-5</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'gpt-orange': '#f97316',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-white text-black min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-black sticky top-0 z-50 shadow-lg h-16">
+        <!-- No content in header as per request -->
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex max-w-7xl mx-auto w-full px-4 py-20">
+        <!-- Sidebar -->
+        <aside class="w-64 pr-8 hidden md:block">
+            <button id="newConversation" class="w-full bg-white border-2 border-black text-black px-4 py-2 rounded-xl font-semibold hover:bg-gpt-orange hover:text-white hover:border-gpt-orange transition-all duration-300 shadow-md mb-6">New Conversation</button>
+            <div id="conversationList" class="space-y-4"></div>
+        </aside>
+
+        <!-- Chat Section -->
+        <section id="chat" class="flex-1">
+            <h3 class="text-4xl font-bold text-center mb-12 text-black">Chat with GPT-5</h3>
+            <div id="chat-container" class="bg-gray-50 rounded-3xl p-8 shadow-xl h-96 overflow-y-auto border border-gray-200 mb-6">
+                <div id="messages" class="space-y-6"></div>
+            </div>
+            <div class="border-t border-gray-200 pt-6">
+                <div class="flex space-x-3 max-w-3xl mx-auto">
+                    <input id="messageInput" type="text" placeholder="Type your message here..." class="flex-1 bg-white border border-gray-300 rounded-2xl px-6 py-4 text-black placeholder-gray-400 focus:outline-none focus:border-gpt-orange focus:ring-2 focus:ring-gpt-orange/20 transition-all duration-300 shadow-sm">
+                    <button id="sendButton" class="bg-white border-2 border-black text-black px-8 py-4 rounded-2xl font-semibold text-lg hover:bg-gpt-orange hover:text-white hover:border-gpt-orange transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">Send</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-50 py-12 text-center border-t border-gray-100">
+        <p class="text-gray-500 text-lg">&copy; 2025 AI Chat Assistant.</p>
+    </footer>
+
+    <script src="https://js.puter.com/v2/"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>
