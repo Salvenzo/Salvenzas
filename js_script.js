@@ -16,12 +16,12 @@ function createNewConversation() {
     const conversation = {
         id,
         title: 'New Conversation',
-        messages: [{ role: 'system', content: 'You are a helpful AI assistant powered by GPT-5.' }]
+        messages: [{ role: 'system', content: 'You are a helpful AI assistant powered by GPT-4o.' }]
     };
     conversations.unshift(conversation);
     saveConversations();
     switchConversation(id);
-    addMessage('assistant', 'Hello! I\'m powered by GPT-5. How can I help you today?');
+    addMessage('assistant', 'Hello! I\'m powered by GPT-4o. How can I help you today?');
 }
 
 function switchConversation(id) {
@@ -44,7 +44,7 @@ function updateConversationList() {
     conversationList.innerHTML = '';
     conversations.forEach(conv => {
         const div = document.createElement('div');
-        div.className = `conversation-item p-3 rounded-lg cursor-pointer transition-all duration-300 ${conv.id === currentConversationId ? 'bg-gray-200 font-medium' : 'hover:bg-gray-100'}`;
+        div.className = `conversation-item p-3 rounded-lg cursor-pointer transition-all duration-300 ${conv.id === currentConversationId ? 'active bg-gray-200 font-medium' : 'hover:bg-gray-100'}`;
         div.textContent = conv.title;
         div.onclick = () => switchConversation(conv.id);
         conversationList.appendChild(div);
@@ -78,7 +78,7 @@ async function sendMessage() {
     addMessage('user', text, true);
     const conv = conversations.find(c => c.id === currentConversationId);
     conv.messages.push({ role: 'user', content: text });
-    updateConversationTitle(); // Update title after first user message
+    updateConversationTitle();
     saveConversations();
     input.value = '';
 
@@ -86,18 +86,20 @@ async function sendMessage() {
     sendButton.innerHTML = '<span class="animate-spin">⏳</span> Thinking...';
 
     try {
-        const response = await puter.ai.chat({
-            model: 'gpt-5',
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), 30000));
+        const responsePromise = puter.ai.chat({
+            model: 'gpt-4o',
             messages: conv.messages,
             temperature: 0.7,
             max_tokens: 500
         });
+        const response = await Promise.race([responsePromise, timeoutPromise]);
         const aiResponse = response.choices[0].message.content;
         addMessage('assistant', aiResponse);
         conv.messages.push({ role: 'assistant', content: aiResponse });
         saveConversations();
     } catch (error) {
-        addMessage('assistant', 'Sorry, there was an error. Please try again.');
+        addMessage('assistant', `Sorry, there was an error: ${error.message}. Please try again.`);
         console.error(error);
     }
 
@@ -119,3 +121,13 @@ if (conversations.length === 0) {
     updateConversationList();
     switchConversation(currentConversationId);
 }
+
+// Mobile toggle for sidebar
+const aside = document.querySelector('aside');
+const toggleButton = document.createElement('button');
+toggleButton.textContent = '☰ Conversations';
+toggleButton.className = 'md:hidden w-full bg-white border-2 border-black text-black px-4 py-2 rounded-xl font-semibold hover:bg-gpt-orange hover:text-white hover:border-gpt-orange transition-all duration-300 shadow-md mb-4';
+toggleButton.onclick = () => {
+    aside.classList.toggle('hidden');
+};
+document.querySelector('main').insertBefore(toggleButton, document.querySelector('aside'));
