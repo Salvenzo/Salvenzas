@@ -16,12 +16,12 @@ function createNewConversation() {
     const conversation = {
         id,
         title: 'New Conversation',
-        messages: [{ role: 'system', content: 'You are a helpful AI assistant powered by GPT-3.5-turbo.' }]
+        messages: [{ role: 'system', content: 'You are a helpful AI assistant powered by GPT-5-nano.' }]
     };
     conversations.unshift(conversation);
     saveConversations();
     switchConversation(id);
-    addMessage('assistant', 'Hello! I\'m powered by GPT-3.5-turbo. How can I help you today?');
+    addMessage('assistant', 'Hello! I\'m powered by GPT-5-nano. How can I help you today?');
 }
 
 function switchConversation(id) {
@@ -88,7 +88,7 @@ async function sendMessage() {
     try {
         const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out after 30 seconds')), 30000));
         const responsePromise = puter.ai.chat({
-            model: 'gpt-3.5-turbo',
+            model: 'gpt-5-nano',
             messages: conv.messages,
             temperature: 0.7,
             max_tokens: 500
