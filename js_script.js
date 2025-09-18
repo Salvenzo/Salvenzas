@@ -16,12 +16,12 @@ function createNewConversation() {
     const conversation = {
         id,
         title: 'New Conversation',
-        messages: [{ role: 'system', content: 'You are a helpful AI assistant powered by GPT-4o.' }]
+        messages: [{ role: 'system', content: 'You are a helpful AI assistant powered by GPT-3.5-turbo.' }]
     };
     conversations.unshift(conversation);
     saveConversations();
     switchConversation(id);
-    addMessage('assistant', 'Hello! I\'m powered by GPT-4o. How can I help you today?');
+    addMessage('assistant', 'Hello! I\'m powered by GPT-3.5-turbo. How can I help you today?');
 }
 
 function switchConversation(id) {
@@ -86,9 +86,9 @@ async function sendMessage() {
     sendButton.innerHTML = '<span class="animate-spin">⏳</span> Thinking...';
 
     try {
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), 30000));
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out after 30 seconds')), 30000));
         const responsePromise = puter.ai.chat({
-            model: 'gpt-4o',
+            model: 'gpt-3.5-turbo',
             messages: conv.messages,
             temperature: 0.7,
             max_tokens: 500
@@ -99,8 +99,11 @@ async function sendMessage() {
         conv.messages.push({ role: 'assistant', content: aiResponse });
         saveConversations();
     } catch (error) {
-        addMessage('assistant', `Sorry, there was an error: ${error.message}. Please try again.`);
-        console.error(error);
+        addMessage('assistant', `Sorry, there was an error: ${error.message}. Please check your connection or try again later.`);
+        console.error('API Error Details:', error);
+        if (!window.puter || !puter.ai || !puter.ai.chat) {
+            alert('Puter.js failed to load. Ensure https://js.puter.com/v2/ is accessible.');
+        }
     }
 
     sendButton.disabled = false;
